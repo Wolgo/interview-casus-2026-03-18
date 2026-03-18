@@ -25,6 +25,24 @@ This does sacrifice some granularity, but that's something to discuss with the f
 
 I don't know how to make this in AWS from the top of my head at all, so I made that for the much simpler Excel stuff. It's rather basic, as data transformation is rather simple.
 
+## Design:
+![img.png](img.png)
+
+On top, we have a Lambda to retrieve the excel and put in the S3 bucket.
+There is a second Lambda to read the excel and put the information into an (rds) database.
+This nicely allows us to manually upload an excel if for some reason the infrastructure breaks.
+
+On the left, we have an eventbridge that can distribute events to a set of lambdas based on the hash of the container ID.
+It then puts the results in the (rds) database. Additionally, an different solution like DynamoDB could be used for the temporal state of the latest containers.
+
+I do not think RDS is neccesarilly the right option as a data storage option. I am currently not the most up-to-date on the various data storage solutions in AWS to make a good estimation here.
+With minimizing the data and RDS could probably handle the load, but if more datapoints are needed anyway different solutions are more suited.
+## Scaling:
+In my solution scaling is sidestepped by minimizing the data. This does however lose some information, which can be a significant limitation.
+The amount of parallel containers that can be handled could be handled by scaling the amount of lambdas that listen to the event bridge, as they are already divided using a hash on the ID.
+## Code:
+Refer to excel-process-stack.ts for some code example for typescript cdk.
+
 ## Points to consider
 
 ### Some data-sources are event-driven, others are more stale. How would you approach this in terms of choosing a storage solution.
@@ -57,7 +75,7 @@ I do need to see the value of a providing a sample lambda as this is all quite s
 I have elected to broadly state my thoughts on the topics I find most readily possible to answer.
 I do have though on the other questions if you want to discuss those. 
 ### Explain why it is a cost-effective solution.
-
+Honestly the solution is cost-effective purely by reducing the data footprint. 
 
 ### How would you approach automated testing to verify acceptance criteria and functionality? If acceptance criteria
    are missing, please use your imagination or email us your questions to get more context. Automated tests are
